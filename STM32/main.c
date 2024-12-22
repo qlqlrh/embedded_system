@@ -79,8 +79,6 @@ void controlVibrateMotor() {
 }
 
 // PIR Sensor to control LED
-//TODO: 값 유지되도록 하여 일정 시간마다 측정하도록 변경 -> 타이머 사용
-//TODO: 사람이 있을 때 만 할 수 있도록..?
 void controlPIRSensor() {
     uint8_t pirState = GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_9);
     if(pirState == Bit_SET){
@@ -204,24 +202,20 @@ void USART1_IRQHandler() {
     memset(wordBuffer, 0, sizeof(wordBuffer));
     if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) {
         char receivedChar = (char)USART_ReceiveData(USART1); // 한 문자 수신
-        printf("Data ; %c\n", receivedChar);
+        printf("Data : %c\n", receivedChar);
         
         USART_ClearITPendingBit(USART1, USART_IT_RXNE); // 인터럽트 플래그 클리어
     }
 }
-
 
 // Interrupt Handler for USART2(BlueTooth)
 void USART2_IRQHandler() {
     uint16_t word;
     if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET){
         word = USART_ReceiveData(USART2);
-        // USART_SendData(USART1, word);
         printf("Received from Bluetooth: %c\n", word);
         USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-    } // else {
-        // printf("No Received from Bluetooth\n");
-    // }
+    }
 }
 
 // Interrupt Handler for 조도센서 to change a 임계값
@@ -363,6 +357,9 @@ void ADC_Configure(void){
 
     /* ADC1 채널 0 (PA0) 설정 */
     ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_55Cycles5);
+
+    // ADC 인터럽트 활성화
+    ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE); // End of Conversion(EOC) 인터럽트 활성화
 
     /* ADC1 활성화 */
     ADC_Cmd(ADC1, ENABLE);
